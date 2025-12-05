@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MenteVivaAR - Sistema de Evaluación Cognitiva</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="https://cdn-icons-png.flaticon.com/512/2491/2491314.png" alt="MenteVivaAR Logo" class="logo">
+                <div class="logo-text">
+                    <h1>MenteVivaAR</h1>
+                    <p>Sistema de Evaluación Cognitiva</p>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn active" onclick="app.showPage('home')">Inicio</button>
+                <button class="nav-btn" onclick="app.showPage('about')">Quiénes Somos</button>
+                <button class="nav-btn" onclick="app.showPage('statistics')">Estadísticas</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-wrapper">
+        <div class="container">
+
+            <!-- Home Page -->
+            <div id="home" class="page active">
+                <div class="hero">
+                    <h2>Bienvenido a MenteVivaAR</h2>
+                    <p>
+                        Sistema avanzado de evaluación cognitiva mediante realidad aumentada. 
+                        Nuestra plataforma permite evaluar y monitorear diferentes capacidades 
+                        cognitivas de manera innovadora y efectiva.
+                    </p>
+                    <br>
+                    <p>
+                        Explore nuestras herramientas de evaluación en memoria, orientación, 
+                        habilidades espaciales y más.
+                    </p>
+                </div>
+            </div>
+
+            <!-- About Page -->
+            <div id="about" class="page">
+                <div class="about-content">
+                    <h2>💡 Quiénes Somos</h2>
+
+                    <p>
+                        En el corazón de este proyecto y esta plataforma se encuentra un 
+                        profundo compromiso con la mejora de la calidad de vida de los 
+                        adultos mayores a través de la innovación tecnológica.
+                    </p>
+
+                    <p>
+                        Somos el equipo de desarrollo detrás del Sistema de Realidad 
+                        Aumentada para la Estimulación Cognitiva, una iniciativa nacida 
+                        como tesis de Ingeniería de Software. Nuestro objetivo es aplicar 
+                        las últimas herramientas tecnológicas para enfrentar los desafíos 
+                        del envejecimiento cognitivo.
+                    </p>
+
+                    <h3>✨ Nuestra Misión</h3>
+
+                    <p>
+                        Desarrollar soluciones tecnológicas accesibles, atractivas y 
+                        eficaces que permitan a los adultos mayores realizar actividades 
+                        diseñadas científicamente para ejercitar y potenciar sus funciones 
+                        cognitivas (como la memoria, la atención y la percepción) de una 
+                        manera novedosa y motivadora.
+                    </p>
+
+                    <h3>🔬 El Proyecto y la Prueba Piloto</h3>
+
+                    <p>
+                        Este sistema fue desarrollado utilizando tecnologías de vanguardia 
+                        como el motor de videojuegos Unity, la librería de Realidad 
+                        Aumentada Vuforia ImageTarget para el reconocimiento de patrones, 
+                        y Firebase para la gestión de datos y resultados.
+                    </p>
+
+                    <p>
+                        El proyecto fue rigurosamente probado en un estudio piloto de tres 
+                        semanas en el Instituto Estupiñan de Latacunga. Un grupo de 15 
+                        adultos mayores participó activamente en las pruebas, arrojando 
+                        resultados prometedores que validan la utilidad y el potencial de 
+                        la Realidad Aumentada como herramienta terapéutica y de apoyo.
+                    </p>
+
+                    <p>
+                        <strong>
+                            Nuestra visión es transformar el cuidado cognitivo, ofreciendo 
+                            una herramienta lúdica y moderna que contribuye directamente 
+                            al bienestar y la autonomía de nuestros mayores.
+                        </strong>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Statistics Page -->
+            <div id="statistics" class="page">
+
+                <div class="filter-section">
+                    <h2>🔍 Filtros de Búsqueda</h2>
+
+                    <div class="filter-group">
+
+                        <div class="filter-item">
+                            <label>Rango de Edad:</label>
+                            <select id="ageFilter">
+                                <option value="all">Todas las edades</option>
+                                <option value="young">Menores de 60</option>
+                                <option value="middle">60-70 años</option>
+                                <option value="senior">Mayores de 70</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-item">
+                            <label>Ordenar por:</label>
+                            <select id="sortBy">
+                                <option value="name">Nombre (A-Z)</option>
+                                <option value="age-asc">Edad (Menor a Mayor)</option>
+                                <option value="age-desc">Edad (Mayor a Menor)</option>
+                                <option value="pin">PIN</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-item">
+                            <label>Buscar:</label>
+                            <input type="text" id="searchInput" placeholder="Nombre o PIN...">
+                        </div>
+
+                    </div>
+
+                    <button class="apply-filter-btn" onclick="app.applyFilters()">
+                        Aplicar Filtros
+                    </button>
+                </div>
+
+                <div class="results-section" id="resultsSection">
+                    <h3 id="resultsTitle">Usuarios Encontrados</h3>
+                    <div class="users-grid" id="usersGrid"></div>
+
+                    <div class="no-results" id="noResults" style="display: none;">
+                        <h3>😕 No se encontraron resultados</h3>
+                        <p>Intenta ajustar los filtros de búsqueda</p>
+                    </div>
+                </div>
+
+                <div class="user-detail" id="userDetail"></div>
+
+            </div>
+
+        </div> <!-- /container -->
+    </div> <!-- /main-wrapper -->
+
+        <!-- Statistics Page -->
+        <div id="statistics" class="page">
+            <div class="filter-section">
+                <h2>🔍 Filtros de Búsqueda</h2>
+                <div class="filter-group">
+                    <div class="filter-item">
+                        <label>Rango de Edad:</label>
+                        <select id="ageFilter">
+                            <option value="all">Todas las edades</option>
+                            <option value="young">Menores de 60</option>
+                            <option value="middle">60-70 años</option>
+                            <option value="senior">Mayores de 70</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-item">
+                        <label>Ordenar por:</label>
+                        <select id="sortBy">
+                            <option value="name">Nombre (A-Z)</option>
+                            <option value="age-asc">Edad (Menor a Mayor)</option>
+                            <option value="age-desc">Edad (Mayor a Menor)</option>
+                            <option value="pin">PIN</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-item">
+                        <label>Buscar:</label>
+                        <input type="text" id="searchInput" placeholder="Nombre o PIN...">
+                    </div>
+                </div>
+
+                <button class="apply-filter-btn" onclick="app.applyFilters()">Aplicar Filtros</button>
+            </div>
+
+            <div class="results-section" id="resultsSection">
+                <h3 id="resultsTitle">Usuarios Encontrados</h3>
+                <div class="users-grid" id="usersGrid"></div>
+                <div class="no-results" id="noResults" style="display: none;">
+                    <h3>😕 No se encontraron resultados</h3>
+                    <p>Intenta ajustar los filtros de búsqueda</p>
+                </div>
+            </div>
+
+            <div class="user-detail" id="userDetail"></div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>© <strong>Universidad de las Fuerzas Armadas ESPE</strong> 2026. Todos los derechos reservados</p>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
