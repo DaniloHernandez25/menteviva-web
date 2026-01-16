@@ -30,7 +30,21 @@
             <!-- Home Page -->
             <div id="home" class="page active">
                 <div class="hero">
+                    <div class="download-app">
+                        <p>
+                            📲 <strong>Descarga la app aquí:</strong><br>
+                            <a href="https://drive.google.com/file/d/1pGun-VFyVCmTHf0EwMRw6nuo9AzrtP6Y/view?usp=sharing" target="_blank">
+                                Descargar MenteVivaAR
+                            </a>
+                        </p>
+                    </div>
+
                     <h2>Bienvenido a MenteVivaAR</h2>
+                    <img 
+                        src="Mente Viva INFO.png" 
+                        alt="Información MenteVivaAR" 
+                        class="home-info-image">
+
                     <p>
                         Sistema avanzado de evaluación cognitiva mediante realidad aumentada. 
                         Nuestra plataforma permite evaluar y monitorear diferentes capacidades 
@@ -155,53 +169,7 @@
             </div>
 
         </div> <!-- /container -->
-    </div> <!-- /main-wrapper -->
-
-        <!-- Statistics Page -->
-        <div id="statistics" class="page">
-            <div class="filter-section">
-                <h2>🔍 Filtros de Búsqueda</h2>
-                <div class="filter-group">
-                    <div class="filter-item">
-                        <label>Rango de Edad:</label>
-                        <select id="ageFilter">
-                            <option value="all">Todas las edades</option>
-                            <option value="young">Menores de 60</option>
-                            <option value="middle">60-70 años</option>
-                            <option value="senior">Mayores de 70</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-item">
-                        <label>Ordenar por:</label>
-                        <select id="sortBy">
-                            <option value="name">Nombre (A-Z)</option>
-                            <option value="age-asc">Edad (Menor a Mayor)</option>
-                            <option value="age-desc">Edad (Mayor a Menor)</option>
-                            <option value="pin">PIN</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-item">
-                        <label>Buscar:</label>
-                        <input type="text" id="searchInput" placeholder="Nombre o PIN...">
-                    </div>
-                </div>
-
-                <button class="apply-filter-btn" onclick="app.applyFilters()">Aplicar Filtros</button>
-            </div>
-
-            <div class="results-section" id="resultsSection">
-                <h3 id="resultsTitle">Usuarios Encontrados</h3>
-                <div class="users-grid" id="usersGrid"></div>
-                <div class="no-results" id="noResults" style="display: none;">
-                    <h3>😕 No se encontraron resultados</h3>
-                    <p>Intenta ajustar los filtros de búsqueda</p>
-                </div>
-            </div>
-
-            <div class="user-detail" id="userDetail"></div>
-        </div>
+    </div> 
 
     <div class="footer">
         <p>© <strong>Universidad de las Fuerzas Armadas ESPE</strong> 2026. Todos los derechos reservados</p>

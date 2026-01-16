@@ -8,13 +8,15 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
 }
 
+
 .main-wrapper {
+    display: flex;
+    flex-direction: column;
     flex: 1;
 }
+
 
 .header {
     background: white;
@@ -71,6 +73,13 @@ body {
     transition: all 0.3s ease;
     background: #667eea;
     color: white;
+}
+.home-info-image {
+    width: 300px;        /* ajusta el tamaño */
+    max-width: 100%;     /* evita que se rompa en móviles */
+    height: auto;        /* mantiene proporción */
+    margin: 20px auto;
+    display: block;
 }
 
 .nav-btn:hover {
@@ -227,7 +236,7 @@ body {
 
 .users-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 20px;
 }
 
