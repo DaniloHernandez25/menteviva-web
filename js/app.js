@@ -1,113 +1,169 @@
-// Aplicación Principal MenteVivaAR - Conexión directa a Firebase
+// Aplicación Principal MenteVivaAR - Versión Corregida
 const app = {
     data: null,
     currentCharts: [],
-    firebaseURL: 'https://fcar-9d923-default-rtdb.firebaseio.com/.json',
 
-    // Inicializar aplicación
-    async init() {
+    // ==========================================
+    // LOGIN DIRECTO
+    // ==========================================
+    async handleLogin(event) {
+        event.preventDefault();
+        const userInp = document.getElementById('username').value.trim();
+        const passInp = document.getElementById('password').value.trim();
+        const errorMsg = document.getElementById('loginError');
+
         try {
-            await this.loadDataFromFirebase();
-            console.log('Datos cargados correctamente desde Firebase');
-            
-            // Opcional: Actualizar datos cada 30 segundos
-            setInterval(() => {
-                this.loadDataFromFirebase();
-                console.log('Datos actualizados automáticamente');
-            }, 30000); // 30 segundos
-            
+            // 1. Validamos contra tu JSON de admins
+            const response = await fetch("https://fcar-9d923-default-rtdb.firebaseio.com/admins/danilo_espe.json");
+            const adminData = await response.json();
+
+            if (adminData && adminData.usuario === userInp && adminData.clave === passInp) {
+                
+                // 2. Autenticación anónima para cumplir con la regla "auth != null"
+                await firebase.auth().signInAnonymously();
+
+                sessionStorage.setItem('isAdmin', 'true');
+                sessionStorage.setItem('adminName', adminData.nombre);
+                document.getElementById('loginBtn').textContent = "Cerrar Sesión";
+                
+                alert(`✅ Bienvenido, ${adminData.nombre}`);
+                this.showPage('statistics');
+                
+                // 3. Cargar los datos con permiso
+                await this.loadData(); 
+                
+            } else {
+                errorMsg.textContent = "❌ Usuario o contraseña incorrectos";
+                errorMsg.style.display = 'block';
+            }
         } catch (error) {
-            console.error('Error al inicializar:', error);
-            alert('Error al cargar los datos de Firebase. Verifica tu conexión.');
+            console.error("Error:", error);
+            alert("Error: Asegúrate de habilitar 'Anonymous Sign-in' en la consola de Firebase > Authentication.");
         }
     },
 
-    // Cargar datos directamente desde Firebase
-    async loadDataFromFirebase() {
-        try {
-            const response = await fetch(this.firebaseURL);
-            
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
+    logout() {
+        firebase.auth().signOut();
+        sessionStorage.clear();
+        document.getElementById('loginBtn').textContent = "Acceso Admin";
+        alert('Sesión cerrada');
+        this.showPage('home');
+    },
+
+    // ==========================================
+    // INICIALIZACIÓN
+    // ==========================================
+    init() {
+        console.log("Iniciando app...");
+
+        // Verificar si hay sesión activa
+        const isAdmin = sessionStorage.getItem('isAdmin');
+        if (isAdmin === 'true') {
+            document.getElementById('loginBtn').textContent = "Cerrar Sesión";
+            document.getElementById('loginBtn').setAttribute('onclick', 'app.logout()');
+        }
+
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                console.log("Usuario autenticado");
+                this.loadData();
+            } else {
+                console.log("No autenticado aún");
             }
-            
-            const data = await response.json();
-            this.data = data;
-            
-            // Si estamos en la página de estadísticas y hay filtros aplicados, refrescar
-            if (document.getElementById('statistics').classList.contains('active')) {
-                const resultsSection = document.getElementById('resultsSection');
-                if (resultsSection.classList.contains('active')) {
+        });
+    },
+
+    // ==========================================
+    // CARGAR DATOS
+    // ==========================================
+    async loadData() {
+        try {
+            console.log("Intentando descargar datos...");
+
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                console.log("No hay usuario autenticado aún");
+                return;
+            }
+
+            const token = await user.getIdToken();
+
+            // Obtener datos con autenticación
+            const response = await fetch(
+                `https://fcar-9d923-default-rtdb.firebaseio.com/.json?auth=${token}`
+            );
+
+            const result = await response.json();
+
+            if (result) {
+                // Ajustar según la estructura de tu base de datos
+                this.data = result.fc_ar ? result.fc_ar : result;
+                console.log("✅ Datos procesados:", this.data);
+
+                // Si estamos en la página de estadísticas, aplicar filtros
+                if (document.getElementById('statistics').classList.contains('active')) {
                     this.applyFilters();
                 }
             }
-            
+
         } catch (error) {
-            console.error('Error cargando datos desde Firebase:', error);
-            throw error;
+            console.error("❌ Error cargando JSON:", error);
         }
     },
 
-    // Obtener la versión más reciente de una prueba para un usuario
-    getLatestTestData(testData) {
-        if (!testData) return null;
-        
-        // Obtener todas las versiones del test
-        const versions = Object.values(testData);
-        
-        // Si solo hay una versión, retornarla
-        if (versions.length === 1) return versions[0];
-        
-        // Ordenar por fecha (más reciente primero)
-        versions.sort((a, b) => {
-            const dateA = new Date(a.fecha.replace(' ', 'T'));
-            const dateB = new Date(b.fecha.replace(' ', 'T'));
-            return dateB - dateA;
-        });
-        
-        return versions[0];
-    },
-
-    // Obtener todas las versiones ordenadas cronológicamente
-    getAllTestVersions(testData) {
-        if (!testData) return [];
-        
-        const versions = Object.values(testData);
-        
-        // Ordenar por fecha (más antigua primero)
-        versions.sort((a, b) => {
-            const dateA = new Date(a.fecha.replace(' ', 'T'));
-            const dateB = new Date(b.fecha.replace(' ', 'T'));
-            return dateA - dateB;
-        });
-        
-        return versions;
-    },
-
-    // Mostrar página
+    // ==========================================
+    // NAVEGACIÓN
+    // ==========================================
     showPage(pageId) {
+        // Verificar acceso a estadísticas
+        if (pageId === 'statistics' && sessionStorage.getItem('isAdmin') !== 'true') {
+            alert('⚠️ Debes iniciar sesión primero');
+            pageId = 'login';
+        }
+
+        // Quitar todas las páginas activas
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+        // Quitar todos los botones activos
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        
-        document.getElementById(pageId).classList.add('active');
-        event.target.classList.add('active');
-        
+
+        // Activar la página solicitada
+        const targetPage = document.getElementById(pageId);
+        if (targetPage) {
+            targetPage.classList.add('active');
+        }
+
+        // Activar el botón correspondiente
+        const buttons = document.querySelectorAll('.nav-btn');
+        buttons.forEach(btn => {
+            const onclick = btn.getAttribute('onclick');
+            if (onclick && onclick.includes(`'${pageId}'`)) {
+                btn.classList.add('active');
+            }
+        });
+
+        // Limpiar secciones de estadísticas si cambiamos de página
         if (pageId === 'statistics') {
-            document.getElementById('resultsSection').classList.remove('active');
-            document.getElementById('userDetail').classList.remove('active');
+            const resultsSection = document.getElementById('resultsSection');
+            const userDetail = document.getElementById('userDetail');
+            if (resultsSection) resultsSection.classList.remove('active');
+            if (userDetail) userDetail.classList.remove('active');
         }
     },
 
-    // Aplicar filtros
+    // ==========================================
+    // FILTROS Y VISTAS
+    // ==========================================
     applyFilters() {
+        if (!this.data || !this.data.usuarios) {
+            console.log("Esperando datos de usuarios...");
+            alert('No hay datos disponibles. Por favor, espera un momento.');
+            return;
+        }
+
         const ageFilter = document.getElementById('ageFilter').value;
         const sortBy = document.getElementById('sortBy').value;
         const searchText = document.getElementById('searchInput').value.toLowerCase();
-
-        if (!this.data || !this.data.usuarios) {
-            alert('No hay datos disponibles. Verifica la conexión a Firebase.');
-            return;
-        }
 
         let users = Object.values(this.data.usuarios);
 
@@ -124,67 +180,70 @@ const app = {
         // Filtrar por búsqueda
         if (searchText) {
             users = users.filter(u => 
-                u.nombre.toLowerCase().includes(searchText) || 
-                u.pin.includes(searchText)
+                (u.nombre && u.nombre.toLowerCase().includes(searchText)) || 
+                (u.pin && u.pin.includes(searchText))
             );
         }
 
         // Ordenar
         users.sort((a, b) => {
-            if (sortBy === 'name') return a.nombre.localeCompare(b.nombre);
+            if (sortBy === 'name') return (a.nombre || "").localeCompare(b.nombre || "");
             if (sortBy === 'age-asc') return a.edad - b.edad;
             if (sortBy === 'age-desc') return b.edad - a.edad;
-            if (sortBy === 'pin') return a.pin.localeCompare(b.pin);
+            if (sortBy === 'pin') return (a.pin || "").localeCompare(b.pin || "");
             return 0;
         });
 
         this.displayUsers(users);
     },
 
-    // Mostrar usuarios
     displayUsers(users) {
         const grid = document.getElementById('usersGrid');
         const noResults = document.getElementById('noResults');
         const resultsSection = document.getElementById('resultsSection');
         const resultsTitle = document.getElementById('resultsTitle');
 
+        if (!grid || !resultsSection) return;
+
         resultsSection.classList.add('active');
 
         if (users.length === 0) {
             grid.innerHTML = '';
-            noResults.style.display = 'block';
-            resultsTitle.textContent = 'No se encontraron usuarios';
+            if (noResults) noResults.style.display = 'block';
+            if (resultsTitle) resultsTitle.textContent = 'No se encontraron usuarios';
             return;
         }
 
-        noResults.style.display = 'none';
-        resultsTitle.textContent = `${users.length} Usuario${users.length !== 1 ? 's' : ''} Encontrado${users.length !== 1 ? 's' : ''}`;
+        if (noResults) noResults.style.display = 'none';
+        if (resultsTitle) resultsTitle.textContent = `${users.length} Usuario${users.length !== 1 ? 's' : ''} Encontrado${users.length !== 1 ? 's' : ''}`;
 
         grid.innerHTML = users.map(user => `
             <div class="user-card" onclick="app.showUserDetail('${user.pin}')">
-                <h4>👤 ${user.nombre}</h4>
+                <h4>👤 ${user.nombre || 'Sin Nombre'}</h4>
                 <p>📌 PIN: ${user.pin}</p>
                 <p>🎂 Edad: ${user.edad} años</p>
             </div>
         `).join('');
     },
 
-    // Mostrar detalle del usuario
+    // ==========================================
+    // DETALLE DEL USUARIO
+    // ==========================================
     showUserDetail(pin) {
         const user = this.data.usuarios[pin];
         if (!user) return;
 
         // Obtener los datos más recientes de cada prueba
-        const espacial = this.getLatestTestData(this.data.espacial[pin]);
-        const memoria = this.getLatestTestData(this.data.memoria[pin]);
-        const orientacion = this.getLatestTestData(this.data.orientacion[pin]);
-        const rompecabezas = this.getLatestTestData(this.data.rompecabezas[pin]);
+        const espacial = this.getLatestTestData(this.data.espacial?.[pin]);
+        const memoria = this.getLatestTestData(this.data.memoria?.[pin]);
+        const orientacion = this.getLatestTestData(this.data.orientacion?.[pin]);
+        const rompecabezas = this.getLatestTestData(this.data.rompecabezas?.[pin]);
 
         // Obtener todas las versiones para gráficas de progreso
-        const espacialVersions = this.getAllTestVersions(this.data.espacial[pin]);
-        const memoriaVersions = this.getAllTestVersions(this.data.memoria[pin]);
-        const orientacionVersions = this.getAllTestVersions(this.data.orientacion[pin]);
-        const rompecabezasVersions = this.getAllTestVersions(this.data.rompecabezas[pin]);
+        const espacialVersions = this.getAllTestVersions(this.data.espacial?.[pin]);
+        const memoriaVersions = this.getAllTestVersions(this.data.memoria?.[pin]);
+        const orientacionVersions = this.getAllTestVersions(this.data.orientacion?.[pin]);
+        const rompecabezasVersions = this.getAllTestVersions(this.data.rompecabezas?.[pin]);
 
         document.getElementById('resultsSection').classList.remove('active');
         const detailDiv = document.getElementById('userDetail');
@@ -201,7 +260,7 @@ const app = {
             <div class="stats-grid">
         `;
 
-        // Espacial
+        // Tarjetas de estadísticas
         if (espacial) {
             const numVersions = espacialVersions.length;
             html += `
@@ -224,7 +283,6 @@ const app = {
             `;
         }
 
-        // Memoria
         if (memoria) {
             const numVersions = memoriaVersions.length;
             const badge = memoria.errores === 0 ? 'badge-success' : 
@@ -249,7 +307,6 @@ const app = {
             `;
         }
 
-        // Orientación
         if (orientacion) {
             const numVersions = orientacionVersions.length;
             const errores = parseInt(orientacion.errores);
@@ -275,7 +332,6 @@ const app = {
             `;
         }
 
-        // Rompecabezas
         if (rompecabezas) {
             const numVersions = rompecabezasVersions.length;
             const badge = rompecabezas.porcentajeError < 50 ? 'badge-success' : 
@@ -345,19 +401,54 @@ const app = {
 
         detailDiv.innerHTML = html;
 
-        // Crear gráficas
+        // Crear gráficas después de un pequeño delay
         setTimeout(() => {
             this.createUserCharts(espacial, memoria, orientacion, rompecabezas);
             
             // Crear gráficas de progreso si hay datos
-            if (espacialVersions.length > 1 || memoriaVersions.length > 1 || 
-                orientacionVersions.length > 1 || rompecabezasVersions.length > 1) {
+            const hasProgress = espacialVersions.length > 1 || memoriaVersions.length > 1 || 
+                               orientacionVersions.length > 1 || rompecabezasVersions.length > 1;
+            if (hasProgress) {
                 this.createProgressCharts(espacialVersions, memoriaVersions, orientacionVersions, rompecabezasVersions);
             }
         }, 100);
     },
 
-    // Crear gráficas del usuario (última versión)
+    // ==========================================
+    // FUNCIONES AUXILIARES
+    // ==========================================
+    getLatestTestData(testData) {
+        if (!testData) return null;
+        
+        const versions = Object.values(testData);
+        if (versions.length === 1) return versions[0];
+        
+        versions.sort((a, b) => {
+            const dateA = new Date(a.fecha.replace(' ', 'T'));
+            const dateB = new Date(b.fecha.replace(' ', 'T'));
+            return dateB - dateA;
+        });
+        
+        return versions[0];
+    },
+
+    getAllTestVersions(testData) {
+        if (!testData) return [];
+        
+        const versions = Object.values(testData);
+        
+        versions.sort((a, b) => {
+            const dateA = new Date(a.fecha.replace(' ', 'T'));
+            const dateB = new Date(b.fecha.replace(' ', 'T'));
+            return dateA - dateB;
+        });
+        
+        return versions;
+    },
+
+    // ==========================================
+    // CREAR GRÁFICAS
+    // ==========================================
     createUserCharts(espacial, memoria, orientacion, rompecabezas) {
         // Destruir gráficas anteriores
         this.currentCharts.forEach(chart => chart.destroy());
@@ -454,7 +545,6 @@ const app = {
         }
     },
 
-    // Crear gráficas de progreso temporal
     createProgressCharts(espacialVersions, memoriaVersions, orientacionVersions, rompecabezasVersions) {
         const maxVersions = Math.max(
             espacialVersions.length,
@@ -594,30 +684,11 @@ const app = {
         }
     },
 
-    // Volver a la lista de usuarios
     showUsersList() {
         document.getElementById('userDetail').classList.remove('active');
         document.getElementById('resultsSection').classList.add('active');
-    },
-
-    // Método para refrescar datos manualmente
-    async refreshData() {
-        try {
-            await this.loadDataFromFirebase();
-            alert('Datos actualizados correctamente');
-            
-            // Si hay filtros aplicados, reaplicarlos
-            const resultsSection = document.getElementById('resultsSection');
-            if (resultsSection.classList.contains('active')) {
-                this.applyFilters();
-            }
-        } catch (error) {
-            alert('Error al actualizar los datos');
-        }
     }
 };
 
 // Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    app.init();
-});
+document.addEventListener('DOMContentLoaded', () => app.init());
