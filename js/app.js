@@ -454,6 +454,10 @@ const app = {
         this.currentCharts.forEach(chart => chart.destroy());
         this.currentCharts = [];
 
+        // Definir fuente global para Chart.js
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#64748b';
+
         const labels = [];
         const times = [];
         const performances = [];
@@ -481,7 +485,7 @@ const app = {
             performances.push(100 - rompecabezas.porcentajeError);
         }
 
-        // Gráfica de tiempos
+        // Gráfica de tiempos (Bar Chart)
         const ctx1 = document.getElementById('userTimeChart');
         if (ctx1) {
             const chart1 = new Chart(ctx1.getContext('2d'), {
@@ -491,26 +495,41 @@ const app = {
                     datasets: [{
                         label: 'Tiempo (segundos)',
                         data: times,
-                        backgroundColor: ['#667eea', '#764ba2', '#ff9800', '#4caf50'],
-                        borderColor: ['#667eea', '#764ba2', '#ff9800', '#4caf50'],
-                        borderWidth: 2
+                        backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#d946ef'],
+                        borderWidth: 0,
+                        borderRadius: 8,
+                        barThickness: 40
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
                     },
                     scales: {
-                        y: { beginAtZero: true }
+                        y: { 
+                            beginAtZero: true,
+                            grid: { color: '#f1f5f9', drawBorder: false }
+                        },
+                        x: {
+                            grid: { display: false, drawBorder: false }
+                        }
                     }
                 }
             });
             this.currentCharts.push(chart1);
         }
 
-        // Gráfica de rendimiento
+        // Gráfica de rendimiento (Radar Chart mejorado)
         const ctx2 = document.getElementById('userPerformanceChart');
         if (ctx2) {
             const chart2 = new Chart(ctx2.getContext('2d'), {
@@ -520,23 +539,50 @@ const app = {
                     datasets: [{
                         label: 'Rendimiento (%)',
                         data: performances,
-                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
-                        borderWidth: 2,
-                        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
-                        pointBorderColor: '#fff',
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: 'rgba(102, 126, 234, 1)'
+                        backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                        borderColor: '#4f46e5',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ffffff',
+                        pointBorderColor: '#4f46e5',
+                        pointBorderWidth: 2,
+                        pointHoverBackgroundColor: '#4f46e5',
+                        pointHoverBorderColor: '#ffffff',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    return ' ' + context.formattedValue + '% de precisión';
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         r: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: { stepSize: 20 }
+                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#e2e8f0' },
+                            pointLabels: {
+                                font: { size: 13, weight: '600' },
+                                color: '#334155'
+                            },
+                            ticks: {
+                                stepSize: 20,
+                                max: 100,
+                                min: 0,
+                                backdropColor: 'transparent',
+                                color: '#94a3b8'
+                            }
                         }
                     }
                 }
@@ -555,6 +601,38 @@ const app = {
 
         const versionLabels = Array.from({length: maxVersions}, (_, i) => `Intento ${i + 1}`);
 
+        // Opciones comunes para gráficas de líneas
+        const commonLineOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { 
+                    display: true, 
+                    position: 'top',
+                    labels: { usePointStyle: true, boxWidth: 8 }
+                },
+                tooltip: {
+                    backgroundColor: '#0f172a',
+                    padding: 12,
+                    cornerRadius: 8,
+                    usePointStyle: true
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9', drawBorder: false }
+                },
+                x: {
+                    grid: { display: false, drawBorder: false }
+                }
+            },
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            }
+        };
+
         // Gráfica de evolución de tiempos
         const ctx3 = document.getElementById('progressTimeChart');
         if (ctx3) {
@@ -564,9 +642,16 @@ const app = {
                 datasets.push({
                     label: 'Espacial',
                     data: espacialVersions.map(v => v.tiempoUsado),
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#4f46e5',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 });
             }
 
@@ -574,9 +659,16 @@ const app = {
                 datasets.push({
                     label: 'Memoria',
                     data: memoriaVersions.map(v => v.tiempoUsado),
-                    borderColor: '#764ba2',
-                    backgroundColor: 'rgba(118, 75, 162, 0.1)',
-                    tension: 0.4
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#10b981',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 });
             }
 
@@ -584,9 +676,16 @@ const app = {
                 datasets.push({
                     label: 'Orientación',
                     data: orientacionVersions.map(v => v.tiempoUsado),
-                    borderColor: '#ff9800',
-                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                    tension: 0.4
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#f59e0b',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 });
             }
 
@@ -594,9 +693,16 @@ const app = {
                 datasets.push({
                     label: 'Rompecabezas',
                     data: rompecabezasVersions.map(v => v.tiempoUsado),
-                    borderColor: '#4caf50',
-                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                    tension: 0.4
+                    borderColor: '#d946ef',
+                    backgroundColor: 'rgba(217, 70, 239, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#d946ef',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 });
             }
 
@@ -607,17 +713,15 @@ const app = {
                     datasets: datasets
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...commonLineOptions,
                     plugins: {
-                        legend: { display: true, position: 'top' },
+                        ...commonLineOptions.plugins,
                         title: {
                             display: true,
-                            text: 'Evolución del tiempo (segundos) - Menor es mejor'
+                            text: 'Evolución del tiempo (segundos) - Menor es mejor',
+                            font: { size: 14, weight: 'bold' },
+                            padding: { bottom: 20 }
                         }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
                     }
                 }
             });
@@ -633,9 +737,16 @@ const app = {
                 datasets.push({
                     label: 'Memoria',
                     data: memoriaVersions.map(v => v.errores),
-                    borderColor: '#764ba2',
-                    backgroundColor: 'rgba(118, 75, 162, 0.1)',
-                    tension: 0.4
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#10b981',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 });
             }
 
@@ -643,9 +754,16 @@ const app = {
                 datasets.push({
                     label: 'Orientación',
                     data: orientacionVersions.map(v => parseInt(v.errores)),
-                    borderColor: '#ff9800',
-                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                    tension: 0.4
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#f59e0b',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 });
             }
 
@@ -653,9 +771,16 @@ const app = {
                 datasets.push({
                     label: 'Rompecabezas (% error)',
                     data: rompecabezasVersions.map(v => v.porcentajeError),
-                    borderColor: '#4caf50',
-                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                    tension: 0.4
+                    borderColor: '#d946ef',
+                    backgroundColor: 'rgba(217, 70, 239, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#d946ef',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 });
             }
 
@@ -666,17 +791,15 @@ const app = {
                     datasets: datasets
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...commonLineOptions,
                     plugins: {
-                        legend: { display: true, position: 'top' },
+                        ...commonLineOptions.plugins,
                         title: {
                             display: true,
-                            text: 'Evolución de errores - Menor es mejor'
+                            text: 'Evolución de errores - Menor es mejor',
+                            font: { size: 14, weight: 'bold' },
+                            padding: { bottom: 20 }
                         }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
                     }
                 }
             });
